@@ -1,0 +1,52 @@
+{
+  "name": "sealedauction",
+  "version": "2.0.0",
+  "description": "SealedAuction - FHE-powered sealed-bid auction platform with privacy-preserving bids",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:simple": "hardhat run scripts/deploy-simple-auction.js --network sepolia",
+    "deploy:sealed": "hardhat run scripts/deploy-sealed-auction.js --network sepolia",
+    "create-auctions": "hardhat run scripts/create-auctions.js --network sepolia",
+    "test": "hardhat test",
+    "clean": "hardhat clean"
+  },
+  "keywords": [
+    "fhe",
+    "auction",
+    "sealed-bid",
+    "privacy",
+    "ethereum",
+    "smart-contracts",
+    "zama",
+    "fhevm"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@fhevm/hardhat-plugin": "^0.3.0-1",
+    "@fhevm/mock-utils": "^0.3.0-2",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^3.1.0",
+    "@nomicfoundation/hardhat-network-helpers": "^1.1.0",
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@nomicfoundation/hardhat-verify": "^2.1.3",
+    "@typechain/ethers-v6": "^0.5.1",
+    "@typechain/hardhat": "^9.1.0",
+    "@types/mocha": "^10.0.10",
+    "chai": "^4.5.0",
+    "hardhat": "^2.22.0",
+    "hardhat-gas-reporter": "^1.0.10",
+    "solidity-coverage": "^0.8.16",
+    "ts-node": "^10.9.2",
+    "typechain": "^8.3.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@fhevm/solidity": "^0.9.1",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^16.4.0",
+    "ethers": "^6.15.0"
+  }
+}

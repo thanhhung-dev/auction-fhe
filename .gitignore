@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+contracts/node_modules/
+
+# Build outputs
+artifacts/
+cache/
+typechain-types/
+frontend/dist/
+contracts/artifacts/
+contracts/cache/
+contracts/typechain-types/
+
+# Environment
+.env
+.env.local
+.env.*.local
+contracts/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel/
+frontend/.vercel/
+
+# Coverage
+coverage/
+coverage.json
+
+# Misc
+*.tsbuildinfo

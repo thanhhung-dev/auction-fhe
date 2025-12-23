@@ -1,0 +1,7 @@
+:root {
+    --font-onest: var(--font-onest);
+}
+
+body {
+    font-family: var(--font-onest), sans-serif;
+}
