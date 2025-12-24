@@ -3,8 +3,9 @@ import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import AuctionCard from './AutionCard.tsx';
-import { AuroraBackground } from '@lobehub/ui/awesome';
-import { InputNumber } from '@lobehub/ui';
+import { txToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
+import { Input, InputNumber } from '@lobehub/ui';
 import { useAccount } from 'wagmi';
 import { createStyles } from 'antd-style';
 import { useParams } from 'next/navigation.js';
@@ -352,13 +353,17 @@ const useStyles = createStyles(({ css, token }) => ({
   `,
 
   relatedTitle: css`
-    white-space: pre-wrap;
-    word-break: break-word;
-    word-wrap: break-word;
-    flex: none;
-    width: 100%;
-    height: auto;
-    position: relative;
+  display: flex;
+  width: 222.733px;
+  height: 39.2px;
+  flex-direction: column;
+  justify-content: center;
+  font-family: Onest;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 39.2px; /* 140% */
+    
   `,
 
   relatedGrid: css`
@@ -366,10 +371,10 @@ const useStyles = createStyles(({ css, token }) => ({
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     grid-auto-rows: min-content;
     justify-content: center;
-    gap: 40px;
-    // width: 100%;
+    gap: 140px;
+    width: 100%;
     max-width: 1400px;
-    // height: min-content;
+    height: min-content;
     padding: 0;
     position: relative;
   `,
@@ -387,7 +392,7 @@ interface AuctionDetailProps {
     description: string;
     mainImage: string;
     thumbnails: string[];
-    auctionStartTime: number; 
+    auctionStartTime: number;
     auctionEndTime: number;
     contractAddress: string;
     tokenId: string;
@@ -409,10 +414,12 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
   const { placeBid, endAuction } = useAuction();
 
-  const [bidAmount, setBidAmount] = useState<number | null>(null);
+
+  const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const { styles, cx } = useStyles();
+  
 
 
   //   const isActive = auction.state === 1;
@@ -427,7 +434,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   const now = Date.now();
   const timeRemaining = Number(auction.auctionEndTime) * 1000 - Date.now();
   const isAuctionActive = timeRemaining > 0;
-  
+
   const formatTimeRemaining = (ms: number) => {
     if (ms <= 0) return 'Ended';
     const hours = Math.floor(ms / (1000 * 60 * 60));
@@ -438,15 +445,40 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   };
 
   const handlePlaceBid = async () => {
-    if (!bidAmount || bidAmount <= 0) return;
-    
+    if (!bidAmount || parseFloat(bidAmount) <= 0) {
+      sonnerToast.error("Invalid bid amount", {
+        description: "Please enter a valid bid amount",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
+    const toastId = txToast.pending("Encrypting and submitting bid...");
+
     try {
-      console.log('Placing encrypted bid:', bidAmount);
-      // TODO: Implement FHE bid logic
-      alert(`Bid placed: ${bidAmount} ETH`);
-    } catch (error) {
-      console.error('Error placing bid:', error);
+      const result = await placeBid(auctionId, bidAmount);
+      txToast.dismiss(toastId);
+      txToast.success(result.hash, "Bid placed successfully!");
+      setBidAmount("");
+    } catch (error: any) {
+      txToast.dismiss(toastId);
+      txToast.error(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEndAuction = async () => {
+    setIsSubmitting(true);
+    const toastId = txToast.pending("Ending auction...");
+
+    try {
+      const result = await endAuction(auctionId);
+      txToast.dismiss(toastId);
+      txToast.success(result.hash, "Auction ended successfully!");
+    } catch (error: any) {
+      txToast.dismiss(toastId);
+      txToast.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -551,24 +583,19 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 </label>
 
                 <div className={styles.inputWrapper}>
-                  <InputNumber
+                  <Input
                     value={bidAmount}
-                    onChange={(value) => setBidAmount(value as number)}
+                    onChange={(e) => setBidAmount(e.target.value)}
                     placeholder={`Min: ${auction.startingBid} ETH`}
                     min={parseFloat(auction.startingBid)}
                     step={0.01}
-                    precision={2}
                   />
                 </div>
 
                 <button
                   className={styles.bidButton}
                   onClick={handlePlaceBid}
-                  disabled={
-                    !bidAmount ||
-                    bidAmount < parseFloat(auction.startingBid) ||
-                    isSubmitting
-                  }
+                  disabled={isSubmitting || !bidAmount}
                 >
                   {isSubmitting ? "Submitting..." : "Submit Encrypted Bid"}
                 </button>
