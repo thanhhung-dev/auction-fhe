@@ -12,6 +12,14 @@ import { useAuction, useAuctionData } from '@/hooks/useAuction';
 
 const useStyles = createStyles(({ css, token }) => ({
   wrapper: css`
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    background: ${token.colorBgLayout};
+  `,
+
+  contentWrapper: css`
     align-items: center;
     display: flex;
     flex: 0 0 auto;
@@ -25,21 +33,12 @@ const useStyles = createStyles(({ css, token }) => ({
     background: ${token.colorBgLayout};
   `,
 
-  contentWrapper: css`
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-    max-width: 1400px;
-    width: 100%;
-    margin: 0 auto;
-  `,
-
   breadcrumb: css`
     display: flex;
     align-items: center;
     gap: 24px;
+    max-width: 1400px;
+    width: 100%;
     height: 48px
     font-size: 14px;
     color: ${token.colorText};
@@ -324,11 +323,6 @@ const useStyles = createStyles(({ css, token }) => ({
   `,
 
   relatedSection: css`
-    --border-color: var(--token-58389c29-c015-4427-a57c-637e65cb6404, #e3e3e3);
-    --border-left-width: 0px;
-    --border-right-width: 0px;
-    --border-style: solid;
-    --border-top-width: 1px;
     flex-flow: column;
     flex: none;
     place-content: center;
@@ -342,26 +336,42 @@ const useStyles = createStyles(({ css, token }) => ({
     overflow: hidden;
   `,
 
+  relatedPtl: css`
+    flex-flow: column;
+    flex: none;
+    place-content: flex-start center;
+    align-items: flex-start;
+    gap: 24px;
+    width: 100%;
+    max-width: 1400px;
+    height: min-content;
+    padding: 0;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  `,
+
   relatedTitle: css`
-    color: ${token.colorText};
-    font-size: 28px;
-    font-weight: 500;
-    line-height: 39.2px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    word-wrap: break-word;
+    flex: none;
+    width: 100%;
+    height: auto;
+    position: relative;
   `,
 
   relatedGrid: css`
-    display: grid;
-    width: 100%;
-    grid-template-columns: repeat(3, 1fr);
+  display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-auto-rows: min-content;
+    justify-content: center;
     gap: 40px;
-
-    @media (max-width: 1024px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
-    }
+    // width: 100%;
+    max-width: 1400px;
+    // height: min-content;
+    padding: 0;
+    position: relative;
   `,
 }));
 const AUCTION_STATES = ["Pending", "Active", "Ended", "Settled", "Cancelled"];
@@ -463,9 +473,9 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
           {/* Left Column - Images */}
           <div className={styles.leftColumn}>
             <div className={styles.mainImage}>
-              <img 
-                src={auction.thumbnails[selectedImage] || auction.mainImage} 
-                alt={auction.title} 
+              <img
+                src={auction.thumbnails[selectedImage] || auction.mainImage}
+                alt={auction.title}
               />
             </div>
 
@@ -473,7 +483,10 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
               {auction.thumbnails.map((thumb, index) => (
                 <div
                   key={index}
-                  className={cx(styles.thumbnail, selectedImage === index && 'active')}
+                  className={cx(
+                    styles.thumbnail,
+                    selectedImage === index && "active"
+                  )}
                   onClick={() => setSelectedImage(index)}
                 >
                   <img src={thumb} alt={`${auction.title} ${index + 1}`} />
@@ -489,7 +502,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
               <div className={styles.titleRow}>
                 <h1 className={styles.title}>{auction.title}</h1>
                 <span className={styles.statusBadge}>
-                  {isAuctionActive ? 'Active' : 'Ended'}
+                  {isAuctionActive ? "Active" : "Ended"}
                 </span>
               </div>
 
@@ -497,7 +510,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 <span className={styles.infoLabel}>Created by: </span>
                 {auction.author}
               </p>
-              
+
               <p className={styles.info}>
                 <span className={styles.infoLabel}>Software: </span>
                 {auction.software}
@@ -508,7 +521,9 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
             <div className={styles.auctionStats}>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Starting Bid</span>
-                <span className={styles.statValue}>{auction.startingBid} ETH</span>
+                <span className={styles.statValue}>
+                  {auction.startingBid} ETH
+                </span>
               </div>
               <div className={styles.statItem}>
                 <span className={styles.statLabel}>Time Remaining</span>
@@ -549,9 +564,13 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 <button
                   className={styles.bidButton}
                   onClick={handlePlaceBid}
-                  disabled={!bidAmount || bidAmount < parseFloat(auction.startingBid) || isSubmitting}
+                  disabled={
+                    !bidAmount ||
+                    bidAmount < parseFloat(auction.startingBid) ||
+                    isSubmitting
+                  }
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Encrypted Bid'}
+                  {isSubmitting ? "Submitting..." : "Submit Encrypted Bid"}
                 </button>
               </div>
             )}
@@ -563,16 +582,17 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
             </div>
           </div>
         </div>
-
-        {/* Related Auctions */}
-        {relatedAuctions.length > 0 && (
-          <div className={styles.relatedSection}>
-            <h2 className={styles.relatedTitle}>More auctions</h2>
+      </div>
+      {/* Related Auctions */}
+      {relatedAuctions.length > 0 && (
+        <div className={styles.relatedSection}>
+          <div className={styles.relatedPtl}>
+            <div className={styles.relatedTitle}>More auctions</div>
             <div className={styles.relatedGrid}>
               {relatedAuctions.map((item) => {
                 const itemTimeRemaining = item.auctionEndsAt - now;
-                const isEndingSoon = itemTimeRemaining < 24 * 60 * 60 * 1000; // Less than 24 hours
-                
+                const isEndingSoon = itemTimeRemaining < 24 * 60 * 60 * 1000;
+
                 return (
                   <AuctionCard
                     key={item.id}
@@ -589,8 +609,8 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
               })}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
