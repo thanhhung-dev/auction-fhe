@@ -17,46 +17,52 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import "swiper/css/effect-coverflow";
-const useStyles = createStyles(({ css, token,responsive }) => ({
+const useStyles = createStyles(({ css, token, responsive }) => ({
   wrapper: css`
-  display: flex;
-  padding: 24px 360px;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: ${token.colorBgLayout};
-  ${responsive.tablet} {
-    padding-block: 120px;
-    max-width: 960px;
-  }
+    display: flex;
+    padding: 24px 16px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: ${token.colorBgLayout};
+    border-top: 1px solid ${token.colorBorder};
 
-    ${responsive.mobile} {
-      padding-block: 80px;
-      padding-inline: 16px;
+    @media (max-width: 1250px) {
+      padding: 60px 20px;
     }
-  }
-`,
+  `,
 
   container: css`
-    display: flex;
-    max-width: 1200px;
+    flex-flow: row;
+    flex: none;
+    place-content: center flex-start;
     align-items: center;
     gap: 32px;
-    align-self: stretch;
+    width: 100%;
+    max-width: 1200px;
+    height: min-content;
+    padding: 0;
+    display: flex;
+    position: relative;
+    overflow: visible;
   `,
 
   left: css`
-    display: flex;
-    // max-width: 600px;
-    flex-direction: column;
-    justify-content: center;
+    flex-flow: column;
+    flex: 1 0 0;
+    place-content: flex-start center;
     align-items: flex-start;
     gap: 24px;
-    flex: 1 0 0;
-
+    width: 1px;
+    max-width: 600px;
+    height: min-content;
+    padding: 0;
+    display: flex;
+    position: relative;
+    overflow: hidden;
     @media (max-width: 1250px) {
-      align-items: center;
-      text-align: center;
+      align-items: flex-start;
+      text-align: left;
     }
   `,
 
@@ -146,6 +152,7 @@ const useStyles = createStyles(({ css, token,responsive }) => ({
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 13px;
+    font-family: Onest;
     cursor: pointer;
     transition: all 0.2s;
     user-select: none;

@@ -6,15 +6,15 @@ import AuctionCard from './AutionCard.tsx';
 const useStyles = createStyles(({ css, token }) => ({
   wrapper: css`
     display: flex;
-    padding: 80px 360px;
+    padding: 24px 16px 80px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     background: ${token.colorBgLayout};
     border-top: 1px solid ${token.colorBorder};
-    
+
     @media (max-width: 1250px) {
-      padding: 60px 20px;
+      padding: 24px 16px 80px;
     }
   `,
 
@@ -31,12 +31,12 @@ const useStyles = createStyles(({ css, token }) => ({
     grid-template-columns: repeat(3, 1fr);
     gap: 32px;
     width: 100%;
-    
+
     @media (max-width: 1024px) {
       grid-template-columns: repeat(2, 1fr);
       gap: 24px;
     }
-    
+
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
       gap: 20px;

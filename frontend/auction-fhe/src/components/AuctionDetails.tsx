@@ -8,29 +8,21 @@ import { InputNumber } from '@lobehub/ui';
 import { useAccount } from 'wagmi';
 import { createStyles } from 'antd-style';
 import { useParams } from 'next/navigation.js';
-import { useAuction, useAuctionData } from '@/hooks/useAuction.js';
+import { useAuction, useAuctionData } from '@/hooks/useAuction';
 
 const useStyles = createStyles(({ css, token }) => ({
   wrapper: css`
+    align-items: center;
     display: flex;
-    flex-direction: column;
-    padding: 40px 360px;
-    position: relative;
+    flex: 0 0 auto;
+    flex-flow: column;
+    gap: 24px;
+    height: min-content;
     overflow: hidden;
+    padding: 24px 16px 56px;
+    position: relative;
+    width: 100%;
     background: ${token.colorBgLayout};
-    & > div:first-child {
-      position: absolute !important;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 0 !important;
-      pointer-events: none;
-    }
-    
-    @media (max-width: 1250px) {
-      padding: 40px 20px;
-    }
   `,
 
   contentWrapper: css`
@@ -39,28 +31,29 @@ const useStyles = createStyles(({ css, token }) => ({
     display: flex;
     flex-direction: column;
     gap: 32px;
-    max-width: 1400px;  
-    width: 100%; 
-    margin: 0 auto; 
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
   `,
 
   breadcrumb: css`
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 24px;
+    height: 48px
     font-size: 14px;
     color: ${token.colorText};
-    
+
     a {
       color: ${token.colorText};
       text-decoration: none;
       transition: color 0.2s;
-      
+
       &:hover {
         color: ${token.colorText};
       }
     }
-    
+
     span {
       color: ${token.colorText};
     }
@@ -70,17 +63,17 @@ const useStyles = createStyles(({ css, token }) => ({
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 16px;
+    padding: 16px;
     background: ${token.colorBgContainer};
     border: 1px solid ${token.colorBorder};
     border-radius: 8px;
     color: ${token.colorText};
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
-    
+
     &:hover {
       background: ${token.colorBgContainer};
       border-color: ${token.colorBorder};
@@ -94,7 +87,7 @@ const useStyles = createStyles(({ css, token }) => ({
     max-width: 1400px;
     width: 100%;
     margin: 0 auto;
-    
+
     @media (max-width: 1024px) {
       grid-template-columns: 1fr;
       gap: 40px;
@@ -114,7 +107,7 @@ const useStyles = createStyles(({ css, token }) => ({
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid ${token.colorBorder};
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -136,15 +129,15 @@ const useStyles = createStyles(({ css, token }) => ({
     border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s;
-    
+
     &:hover {
       border-color: ${token.colorBorder};
     }
-    
+
     &.active {
       border-color: ${token.colorBorder};
     }
-    
+
     img {
       width: 100%;
       height: 100%;
@@ -250,27 +243,28 @@ const useStyles = createStyles(({ css, token }) => ({
       width: 100%;
       height: 48px;
       background: ${token.colorBgContainer} !important;
-      border: 1px solid ${token.colorBorder} !important;  
+      border: 1px solid ${token.colorBorder} !important;
       border-radius: 10px;
-      
+
       &:hover {
         border-color: ${token.colorBorder} !important;
         background: ${token.colorBgContainer} !important;
       }
-      
-      &:focus, &.ant-input-number-focused {
+
+      &:focus,
+      &.ant-input-number-focused {
         border-color: ${token.colorBorder} !important;
         background: ${token.colorBgContainer} !important;
         box-shadow: 0 0 0 2px ${token.colorBorder} !important;
       }
-      
+
       .ant-input-number-input {
         color: ${token.colorText};
         font-size: 16px;
         font-weight: 500;
         height: 46px;
       }
-      
+
       .ant-input-number-input::placeholder {
         color: ${token.colorText};
       }
@@ -291,15 +285,15 @@ const useStyles = createStyles(({ css, token }) => ({
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    
+
     &:hover:not(:disabled) {
-      background: #ffffffff;  
+      background: #ffffffff;
     }
-    
+
     &:active:not(:disabled) {
       transform: translateY(1px);
     }
-    
+
     &:disabled {
       background: ${token.colorBgContainer};
       color: ${token.colorText};
@@ -330,15 +324,22 @@ const useStyles = createStyles(({ css, token }) => ({
   `,
 
   relatedSection: css`
+    --border-color: var(--token-58389c29-c015-4427-a57c-637e65cb6404, #e3e3e3);
+    --border-left-width: 0px;
+    --border-right-width: 0px;
+    --border-style: solid;
+    --border-top-width: 1px;
+    flex-flow: column;
+    flex: none;
+    place-content: center;
+    align-items: center;
+    gap: 32px;
+    width: 100%;
+    height: min-content;
+    padding: 24px 16px;
     display: flex;
-    max-width: 1400px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 24px;
-    align-self: stretch;
-    border-top: 1px solid ${token.colorBorder};
-    padding-top: 40px;
+    position: relative;
+    overflow: hidden;
   `,
 
   relatedTitle: css`
@@ -353,11 +354,11 @@ const useStyles = createStyles(({ css, token }) => ({
     width: 100%;
     grid-template-columns: repeat(3, 1fr);
     gap: 40px;
-    
+
     @media (max-width: 1024px) {
       grid-template-columns: repeat(2, 1fr);
     }
-    
+
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
     }
@@ -369,17 +370,17 @@ interface AuctionDetailProps {
     id: string;
     title: string;
     author: string;
+    seller: string;
+    highestBidder: string;
     startingBid: string;
     software: string;
     description: string;
     mainImage: string;
     thumbnails: string[];
-    auctionStartTime: number;
+    auctionStartTime: number; 
     auctionEndTime: number;
     contractAddress: string;
     tokenId: string;
-    seller: string;
-    highestBidder: string;
     state: number;
   };
   relatedAuctions: Array<{
@@ -443,8 +444,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
 
   return (
     <div className={styles.wrapper}>
-      <AuroraBackground />
-
+      {/* <AuroraBackground /> */}
       <div className={styles.contentWrapper}>
         {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
@@ -574,17 +574,17 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 const isEndingSoon = itemTimeRemaining < 24 * 60 * 60 * 1000; // Less than 24 hours
                 
                 return (
-                    <AuctionCard
-                      key={item.id}
-                      id={parseInt(item.id)}
-                      title={item.title}
-                      type="NFT"
-                      currentBid="Encrypted"
-                      timeLeft={formatTimeRemaining(itemTimeRemaining)}
-                      status={isEndingSoon ? 'ending-soon' : 'active'}
-                      bidders={0}
-                      imageUrl={item.image}
-                    />
+                  <AuctionCard
+                    key={item.id}
+                    id={parseInt(item.id, 10)}
+                    title={item.title}
+                    type="NFT"
+                    currentBid="Encrypted"
+                    timeLeft={formatTimeRemaining(itemTimeRemaining)}
+                    status={isEndingSoon ? "ending-soon" : "active"}
+                    bidders={0}
+                    imageUrl={item.image}
+                  />
                 );
               })}
             </div>

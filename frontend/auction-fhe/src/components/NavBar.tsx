@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { useAccount } from 'wagmi';
-import { usePathname } from 'next/navigation';
-import { createStyles } from 'antd-style';
-import WalletButton from './ButtonWallet/WalletButton';
+import Link from "next/link";
+import { useAccount } from "wagmi";
+import { usePathname } from "next/navigation";
+import { createStyles } from "antd-style";
+import WalletButton from "./ButtonWallet/WalletButton";
 
 const useStyles = createStyles(({ css, token }) => ({
   header: css`
@@ -15,9 +15,7 @@ const useStyles = createStyles(({ css, token }) => ({
   container: css`
     display: flex;
     align-items: center;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
+    align-self: stretch;
   `,
   wrapper: css`
     display: flex;
@@ -30,16 +28,22 @@ const useStyles = createStyles(({ css, token }) => ({
     display: flex;
     padding: 12px;
     align-items: center;
+    flex: 1 0 0;
   `,
   logoText: css`
     font-size: 20px;
+    font-family: Onest;
     font-weight: 700;
     color: ${token.colorText};
+    white-space: nowrap;
   `,
   right: css`
     display: flex;
     align-items: center;
+    padding: 12px;
+    padding-right: 32px;
     gap: 16px;
+    margin-left: auto;
   `,
   nav: css`
     display: flex;
@@ -47,11 +51,13 @@ const useStyles = createStyles(({ css, token }) => ({
     gap: 24px;
   `,
   navLink: css`
-    font-size: 14px;
-    font-weight: 500;
-    color: ${token.colorTextSecondary};
-    text-decoration: none;
-    transition: color 0.2s;
+    color: #666;
+    font-family: Onest;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 24px;
+    gap: 24px;
 
     &:hover {
       color: ${token.colorPrimary};
@@ -66,31 +72,37 @@ const useStyles = createStyles(({ css, token }) => ({
 const NavBar = () => {
   const pathname = usePathname();
   const { isConnected } = useAccount();
-  const isHome = pathname === '/';
+  const isHome = pathname === "/";
   const { styles, cx } = useStyles();
 
   return (
     <header className={styles.header}>
       <div className={styles.container}>
         <div className={styles.wrapper}>
-          {/* LEFT */}
+          {/* LEFT - Logo */}
           <Link href="/" className={styles.logoLink}>
             <span className={styles.logoText}>AuctionFHE</span>
           </Link>
 
-          {/* RIGHT */}
+          {/* RIGHT - Navigation & Wallet */}
           <div className={styles.right}>
             <nav className={styles.nav}>
               <Link
                 href="/"
-                className={cx(styles.navLink, pathname === '/auctions' && 'active')}
+                className={cx(
+                  styles.navLink,
+                  (pathname === "/" || pathname === "/auctions") && "active"
+                )}
               >
-                Auctions
+                Explore
               </Link>
 
               <Link
                 href="/create"
-                className={cx(styles.navLink, pathname === '/create' && 'active')}
+                className={cx(
+                  styles.navLink,
+                  pathname === "/create" && "active"
+                )}
               >
                 Create
               </Link>
@@ -98,7 +110,10 @@ const NavBar = () => {
               {isConnected && (
                 <Link
                   href="/my-bids"
-                  className={cx(styles.navLink, pathname === '/my-bids' && 'active')}
+                  className={cx(
+                    styles.navLink,
+                    pathname === "/my-bids" && "active"
+                  )}
                 >
                   My Bids
                 </Link>
