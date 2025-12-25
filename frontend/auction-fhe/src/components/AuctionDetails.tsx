@@ -419,12 +419,11 @@ interface AuctionDetailProps {
 
 export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetailProps) {
   const { id } = useParams();
-  const [alert, setAlert] = useState<AlertState>({
-    visible: false,
-    type: 'info',
-    title: '',
-    description: '',
-  });
+  const [alert, setAlert] = useState<{
+    type?: 'info' | 'success' | 'warning' | 'error' | 'secondary';
+    title?: string;
+    description?: React.ReactNode;
+  } | null>(null);
   const auctionId = Number(id);
   const { address, isConnected } = useAccount();
   const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
@@ -458,12 +457,12 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
     return `${hours}h ${minutes}m`;
   };
 
-  const showAlert = (type: AlertState['type'], title: string, description: string) => {
-    setAlert({ visible: true, type, title, description });
-    // Auto hide sau 5 giây
-    setTimeout(() => {
-      setAlert(prev => ({ ...prev, visible: false }));
-    }, 5000);
+  const showAlert = (
+    type: 'info' | 'success' | 'warning' | 'error' | 'secondary',
+    title: string,
+    description: string
+  ) => {
+    setAlert({ type, title, description });
   };
 
   const handlePlaceBid = async () => {
@@ -477,11 +476,17 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
 
     try {
       const result = await placeBid(auctionId, bidAmount);
-
       showAlert(
         'success',
         'Bid Placed Successfully!',
-        `Your encrypted bid has been submitted. Transaction: ${result.hash.slice(0, 10)}...${result.hash.slice(-8)}`
+        <a
+           href={`https://sepolia.etherscan.io/tx/${result.hash}`} 
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#1677ff" }}
+        >
+          View on Etherscan ({result.hash.slice(0, 10)}...{result.hash.slice(-8)})
+        </a>
       );
       setBidAmount("");
     } catch (error: any) {
@@ -505,7 +510,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
         'success',
         'Auction Ended Successfully!',
         `The auction has been ended. Transaction: ${result.hash.slice(0, 10)}...${result.hash.slice(-8)}`
-      );  
+      );
     } catch (error: any) {
       showAlert(
         'error',
@@ -518,6 +523,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   };
 
   return (
+
     <div className={styles.wrapper}>
       {/* <AuroraBackground /> */}
       <div className={styles.contentWrapper}>
@@ -607,7 +613,16 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 </span>
               </div>
             </div>
-
+            {alert && (
+              <Alert
+                type={alert.type}
+                message={alert.title}
+                description={alert.description}
+                showIcon
+                closable
+                onClose={() => setAlert(null)}
+              />
+            )}
             {/* Bid Section */}
             {isAuctionActive && (
               <div className={styles.bidSection}>

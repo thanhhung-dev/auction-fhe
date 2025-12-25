@@ -5,7 +5,7 @@ import { parseEther, parseGwei } from "viem";
 import { AUCTION_CONTRACT_ADDRESS } from "@/lib/contracts/addresses";
 import { encryptBid, waitForFHE, isFHEReady } from "@/lib/fhe";
 import AuctionABI from "@/lib/contracts/SimpleFHEAuction.json";
-
+import { Alert } from "@lobehub/ui";
 export interface AuctionData {
   seller: string;
   startPrice: bigint;
@@ -21,6 +21,7 @@ export interface AuctionData {
 
 // Compute auction state from flags
 export function getAuctionState(auction: AuctionData): number {
+  
   if (auction.cancelled) return 4; // Cancelled
   if (auction.settled) return 3; // Settled
   if (auction.ended) return 2; // Ended
@@ -29,6 +30,7 @@ export function getAuctionState(auction: AuctionData): number {
   return 0; // Pending
 }
 
+
 /**
  * Hook for interacting with SimpleFHE Auction contract
  */
@@ -36,7 +38,6 @@ export function useAuction() {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { writeContractAsync } = useWriteContract();
-
   /**
    * Place an encrypted bid on an auction
    * @param auctionId The auction ID to bid on
