@@ -11,7 +11,7 @@ import { createStyles } from 'antd-style';
 import { useParams } from 'next/navigation.js';
 import { useAuction, useAuctionData } from '@/hooks/useAuction';
 import WalletButton from "./ButtonWallet/WalletButton";
-
+import { Alert } from '@lobehub/ui';
 const useStyles = createStyles(({ css, token }) => ({
   wrapper: css`
     display: flex;
@@ -384,6 +384,12 @@ const useStyles = createStyles(({ css, token }) => ({
   `,
 }));
 const AUCTION_STATES = ["Pending", "Active", "Ended", "Settled", "Cancelled"];
+interface AlertState {
+  visible: boolean;
+  type: 'success' | 'error' | 'info' | 'warning';
+  title: string;
+  description: string;
+}
 interface AuctionDetailProps {
   auction: {
     id: string;
@@ -413,12 +419,16 @@ interface AuctionDetailProps {
 
 export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetailProps) {
   const { id } = useParams();
+  const [alert, setAlert] = useState<AlertState>({
+    visible: false,
+    type: 'info',
+    title: '',
+    description: '',
+  });
   const auctionId = Number(id);
   const { address, isConnected } = useAccount();
   const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
   const { placeBid, endAuction } = useAuction();
-
-
   const [bidAmount, setBidAmount] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -448,25 +458,38 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
     return `${hours}h ${minutes}m`;
   };
 
+  const showAlert = (type: AlertState['type'], title: string, description: string) => {
+    setAlert({ visible: true, type, title, description });
+    // Auto hide sau 5 giây
+    setTimeout(() => {
+      setAlert(prev => ({ ...prev, visible: false }));
+    }, 5000);
+  };
+
   const handlePlaceBid = async () => {
     if (!bidAmount || parseFloat(bidAmount) <= 0) {
-      sonnerToast.error("Invalid bid amount", {
-        description: "Please enter a valid bid amount",
-      });
+      showAlert('error', 'Invalid Bid Amount', 'Please enter a valid bid amount');
       return;
     }
 
     setIsSubmitting(true);
-    const toastId = txToast.pending("Encrypting and submitting bid...");
+    showAlert('info', 'Processing Bid', 'Encrypting and submitting your bid to the blockchain...');
 
     try {
       const result = await placeBid(auctionId, bidAmount);
-      txToast.dismiss(toastId);
-      txToast.success(result.hash, "Bid placed successfully!");
+
+      showAlert(
+        'success',
+        'Bid Placed Successfully!',
+        `Your encrypted bid has been submitted. Transaction: ${result.hash.slice(0, 10)}...${result.hash.slice(-8)}`
+      );
       setBidAmount("");
     } catch (error: any) {
-      txToast.dismiss(toastId);
-      txToast.error(error);
+      showAlert(
+        'error',
+        'Bid Failed',
+        error?.message || 'Failed to place bid. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -474,15 +497,21 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
 
   const handleEndAuction = async () => {
     setIsSubmitting(true);
-    const toastId = txToast.pending("Ending auction...");
+    showAlert('info', 'Ending Auction', 'Ending the auction on the blockchain...');
 
     try {
       const result = await endAuction(auctionId);
-      txToast.dismiss(toastId);
-      txToast.success(result.hash, "Auction ended successfully!");
+      showAlert(
+        'success',
+        'Auction Ended Successfully!',
+        `The auction has been ended. Transaction: ${result.hash.slice(0, 10)}...${result.hash.slice(-8)}`
+      );  
     } catch (error: any) {
-      txToast.dismiss(toastId);
-      txToast.error(error);
+      showAlert(
+        'error',
+        'Auction End Failed',
+        error?.message || 'Failed to end auction. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
     }
