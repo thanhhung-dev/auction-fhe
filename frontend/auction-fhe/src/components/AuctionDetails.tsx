@@ -10,6 +10,7 @@ import { useAccount } from 'wagmi';
 import { createStyles } from 'antd-style';
 import { useParams } from 'next/navigation.js';
 import { useAuction, useAuctionData } from '@/hooks/useAuction';
+import WalletButton from "./ButtonWallet/WalletButton";
 
 const useStyles = createStyles(({ css, token }) => ({
   wrapper: css`
@@ -63,7 +64,7 @@ const useStyles = createStyles(({ css, token }) => ({
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 16px;
+    padding: 12px;
     background: ${token.colorBgContainer};
     border: 1px solid ${token.colorBorder};
     border-radius: 8px;
@@ -413,7 +414,7 @@ interface AuctionDetailProps {
 export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetailProps) {
   const { id } = useParams();
   const auctionId = Number(id);
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
   const { placeBid, endAuction } = useAuction();
 
@@ -422,7 +423,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const { styles, cx } = useStyles();
-  
+
 
 
   //   const isActive = auction.state === 1;
@@ -581,27 +582,40 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
             {/* Bid Section */}
             {isAuctionActive && (
               <div className={styles.bidSection}>
-                <label className={styles.bidLabel}>
-                  Place your encrypted bid (ETH)
-                </label>
+                {!isConnected ? (
+                  // Hiển thị button Connect Wallet khi chưa đăng nhập
+                  <>
+                    <label className={styles.bidLabel}>
+                      Connect your wallet to place a bid
+                    </label>
+                    <WalletButton />
+                  </>
+                ) : (
+                  // Hiển thị form bid khi đã đăng nhập
+                  <>
+                    <label className={styles.bidLabel}>
+                      Place your encrypted bid (ETH)
+                    </label>
 
-                <div className={styles.inputWrapper}>
-                  <InputNumber
-                    value={bidAmount}
-                    onChange={(value) => setBidAmount(value)}
-                    placeholder={`Min: ${auction.startingBid} ETH`}
-                    min={parseFloat(auction.startingBid)}
-                    step={0.01}
-                  />
-                </div>
+                    <div className={styles.inputWrapper}>
+                      <InputNumber
+                        value={bidAmount}
+                        onChange={(value) => setBidAmount(value)}
+                        placeholder={`Min: ${auction.startingBid} ETH`}
+                        min={parseFloat(auction.startingBid)}
+                        step={0.01}
+                      />
+                    </div>
 
-                <button
-                  className={styles.bidButton}
-                  onClick={handlePlaceBid}
-                  disabled={isSubmitting || !bidAmount}
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Encrypted Bid"}
-                </button>
+                    <button
+                      className={styles.bidButton}
+                      onClick={handlePlaceBid}
+                      disabled={isSubmitting || !bidAmount}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Encrypted Bid"}
+                    </button>
+                  </>
+                )}
               </div>
             )}
 
