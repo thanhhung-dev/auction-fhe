@@ -38,7 +38,7 @@ const useStyles = createStyles(({ css, token }) => ({
     display: flex;
     align-items: center;
     gap: 24px;
-    max-width: 1400px;
+    max-width: 1200px;
     width: 100%;
     height: 48px
     font-size: 14px;
@@ -84,7 +84,7 @@ const useStyles = createStyles(({ css, token }) => ({
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 60px;
-    max-width: 1400px;
+    max-width: 1200px;
     width: 100%;
     margin: 0 auto;
 
@@ -103,10 +103,14 @@ const useStyles = createStyles(({ css, token }) => ({
   mainImage: css`
     width: 100%;
     aspect-ratio: 1;
-    background: ${token.colorBgContainer};
-    border-radius: 16px;
+    border-radius: 20px;
     overflow: hidden;
-    border: 1px solid ${token.colorBorder};
+    background: ${token.colorBgContainer};
+
+    border: 7px solid #ebebebff;
+
+    box-shadow: inset 0 0 0 1px rgba(144, 144, 144, 0.6),
+      0 8px 24px rgba(0, 0, 0, 0.06);
 
     img {
       width: 100%;
@@ -344,7 +348,7 @@ const useStyles = createStyles(({ css, token }) => ({
     align-items: flex-start;
     gap: 24px;
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
     height: min-content;
     padding: 0;
     display: flex;
@@ -353,27 +357,26 @@ const useStyles = createStyles(({ css, token }) => ({
   `,
 
   relatedTitle: css`
-  display: flex;
-  width: 222.733px;
-  height: 39.2px;
-  flex-direction: column;
-  justify-content: center;
-  font-family: Onest;
-  font-size: 28px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 39.2px; /* 140% */
-    
+    display: flex;
+    width: 222.733px;
+    height: 39.2px;
+    flex-direction: column;
+    justify-content: center;
+    font-family: Onest;
+    font-size: 28px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 39.2px; /* 140% */
   `,
 
   relatedGrid: css`
-  display: grid;
+    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     grid-auto-rows: min-content;
     justify-content: center;
-    gap: 140px;
+    gap: 40px;
     width: 100%;
-    max-width: 1400px;
+    max-width: 1200px;
     height: min-content;
     padding: 0;
     position: relative;
@@ -583,9 +586,9 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 </label>
 
                 <div className={styles.inputWrapper}>
-                  <Input
+                  <InputNumber
                     value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
+                    onChange={(value) => setBidAmount(value)}
                     placeholder={`Min: ${auction.startingBid} ETH`}
                     min={parseFloat(auction.startingBid)}
                     step={0.01}
