@@ -429,7 +429,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   const { address, isConnected } = useAccount();
   const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
   const { placeBid, endAuction } = useAuction();
-  const [bidAmount, setBidAmount] = useState("");
+  const [bidAmount, setBidAmount] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const { styles, cx } = useStyles();
@@ -629,7 +629,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                     <div className={styles.inputWrapper}>
                       <InputNumber
                         value={bidAmount}
-                        onChange={(value) => setBidAmount(value)}
+                        onChange={(value) => setBidAmount(value?.toString() || "")}
                         placeholder={`Min: ${auction.startingBid} ETH`}
                         min={parseFloat(auction.startingBid)}
                         step={0.01}

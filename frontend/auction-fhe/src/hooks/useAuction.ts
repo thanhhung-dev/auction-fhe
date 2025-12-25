@@ -1,3 +1,4 @@
+'use client'
 import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, usePublicClient, useReadContract } from "wagmi";
 import { parseEther, parseGwei } from "viem";
@@ -81,6 +82,7 @@ export function useAuction() {
         abi: AuctionABI.abi,
         functionName: "submitBid",
         args: [BigInt(auctionId), handle, proof],
+        gas: 12_000_000n,
       });
 
       console.log('[Auction] Transaction submitted:', hash);

@@ -1,3 +1,4 @@
+'use client'
 import { bytesToHex, getAddress } from "viem";
 import type { Address } from "viem";
 import { AUCTION_CONTRACT_ADDRESS } from "@/lib/contracts/addresses";

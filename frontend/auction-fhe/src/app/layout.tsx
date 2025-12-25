@@ -22,8 +22,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <head>
         <Script
-          src="https://relayer.fhenix.zone/sdk/sdk.js"
-          strategy="beforeInteractive"
+          src="https://cdn.zama.org/relayer-sdk-js/0.3.0-5/relayer-sdk-js.umd.cjs"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
         />
       </head>
 
