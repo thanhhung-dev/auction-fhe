@@ -2,11 +2,7 @@
 
 > Privacy-Preserving Sealed-Bid Auction Platform Powered by Fully Homomorphic Encryption
 
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-363636?logo=solidity)](https://soliditylang.org/)
-[![Zama fhEVM](https://img.shields.io/badge/fhEVM-0.9.1-blue)](https://docs.zama.ai/fhevm)
-[![nextjs](https://img.shields.io/badge/React-18.3-61dafb?logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?logo=typescript)](https://www.typescriptlang.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 
 ## Live Demo
 
