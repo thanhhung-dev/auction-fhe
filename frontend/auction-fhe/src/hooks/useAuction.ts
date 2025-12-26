@@ -1,6 +1,11 @@
-'use client'
+"use client";
 import { useState, useEffect } from "react";
-import { useAccount, useWriteContract, usePublicClient, useReadContract } from "wagmi";
+import {
+  useAccount,
+  useWriteContract,
+  usePublicClient,
+  useReadContract,
+} from "wagmi";
 import { parseEther, parseGwei } from "viem";
 import { AUCTION_CONTRACT_ADDRESS } from "@/lib/contracts/addresses";
 import { encryptBid, waitForFHE, isFHEReady } from "@/lib/fhe";
@@ -21,7 +26,6 @@ export interface AuctionData {
 
 // Compute auction state from flags
 export function getAuctionState(auction: AuctionData): number {
-  
   if (auction.cancelled) return 4; // Cancelled
   if (auction.settled) return 3; // Settled
   if (auction.ended) return 2; // Ended
@@ -29,7 +33,6 @@ export function getAuctionState(auction: AuctionData): number {
   if (now >= auction.startTime && now < auction.endTime) return 1; // Active
   return 0; // Pending
 }
-
 
 /**
  * Hook for interacting with SimpleFHE Auction contract
@@ -49,21 +52,22 @@ export function useAuction() {
     }
 
     // Wait for FHE SDK to load
-    console.log('[Auction] Checking FHE SDK status...');
+    console.log("[Auction] Checking FHE SDK status...");
     if (!isFHEReady()) {
-      console.log('[Auction] Waiting for FHE SDK to load...');
+      console.log("[Auction] Waiting for FHE SDK to load...");
       const ready = await waitForFHE(15000);
       if (!ready) {
-        throw new Error("FHE SDK not loaded. Please refresh the page and try again.");
+        throw new Error(
+          "FHE SDK not loaded. Please refresh the page and try again."
+        );
       }
     }
 
     try {
       // Convert ETH to Gwei for encryption (1 ETH = 1e9 Gwei)
-      // This keeps the value within 64-bit integer range
       const bidGwei = parseGwei(bidAmount);
 
-      console.log('[Auction] Encrypting bid:', {
+      console.log("[Auction] Encrypting bid:", {
         auctionId,
         bidAmount,
         bidGwei: bidGwei.toString(),
@@ -75,7 +79,62 @@ export function useAuction() {
         address as `0x${string}`
       );
 
-      console.log('[Auction] Bid encrypted, submitting to contract...');
+      console.log("[Auction] Bid encrypted, submitting to contract...", {
+        handle,
+        proofLength: proof.length,
+      });
+
+      // ⭐ ESTIMATE GAS TRƯỚC KHI SUBMIT
+      let estimatedGas;
+      try {
+        estimatedGas = await publicClient?.estimateContractGas({
+          address: AUCTION_CONTRACT_ADDRESS as `0x${string}`,
+          abi: AuctionABI.abi,
+          functionName: "submitBid",
+          args: [BigInt(auctionId), handle, proof],
+          account: address,
+        });
+        console.log("[Auction] Estimated gas:", estimatedGas);
+      } catch (estimateError: any) {
+        console.error("[Auction] Gas estimation failed:", estimateError);
+
+        // ⭐ PARSE REVERT REASON TỪ ESTIMATE ERROR
+        let revertReason = "Unknown error";
+
+        if (estimateError.message) {
+          console.log("[Auction] Error message:", estimateError.message);
+
+          // Check for common revert reasons
+          if (estimateError.message.includes("Auction not active")) {
+            revertReason = "Auction is not active yet or has ended";
+          } else if (estimateError.message.includes("Bid too low")) {
+            revertReason = "Your bid is below the minimum required amount";
+          } else if (estimateError.message.includes("Already bid")) {
+            revertReason = "You have already placed a bid on this auction";
+          } else if (estimateError.message.includes("insufficient funds")) {
+            revertReason = "Insufficient funds in your wallet";
+          } else {
+            revertReason = estimateError.message;
+          }
+        }
+
+        if (estimateError.details) {
+          console.log("[Auction] Error details:", estimateError.details);
+        }
+
+        if (estimateError.data) {
+          console.log("[Auction] Error data:", estimateError.data);
+        }
+
+        throw new Error(`Transaction will fail: ${revertReason}`);
+      }
+
+      // Add 20% buffer to estimated gas
+      const gasWithBuffer = estimatedGas
+        ? (estimatedGas * 120n) / 100n
+        : undefined;
+
+      console.log("[Auction] Submitting transaction with gas:", gasWithBuffer);
 
       // Submit encrypted bid to contract
       const hash = await writeContractAsync({
@@ -83,19 +142,65 @@ export function useAuction() {
         abi: AuctionABI.abi,
         functionName: "submitBid",
         args: [BigInt(auctionId), handle, proof],
-        gas: 12_000_000n,
+        gas: gasWithBuffer,
       });
 
-      console.log('[Auction] Transaction submitted:', hash);
+      console.log("[Auction] Transaction submitted:", hash);
 
       // Wait for transaction confirmation
-      const receipt = await publicClient?.waitForTransactionReceipt({ hash });
+      const receipt = await publicClient?.waitForTransactionReceipt({
+        hash,
+      });
 
-      console.log('[Auction] Bid placed successfully!');
+      console.log("[Auction] Transaction receipt:", receipt);
+
+      if (receipt?.status === "reverted") {
+        throw new Error(
+          "Transaction reverted. Please check the contract requirements."
+        );
+      }
+
+      console.log("[Auction] Bid placed successfully!");
       return { hash, receipt };
-    } catch (error) {
+    } catch (error: any) {
       console.error("[Auction] Failed to place bid:", error);
-      throw error;
+
+      // ⭐ DETAILED ERROR PARSING
+      let errorMessage = "Failed to place bid";
+
+      if (error.message) {
+        errorMessage = error.message;
+      }
+
+      // Parse common error patterns
+      if (error.message?.includes("insufficient funds")) {
+        const match = error.message.match(/balance (\d+)/);
+        if (match) {
+          const balanceWei = BigInt(match[1]);
+          const balanceEth = Number(balanceWei) / 1e18;
+          errorMessage = `Insufficient funds. Your balance: ${balanceEth.toFixed(
+            6
+          )} ETH. Please get more Sepolia ETH from a faucet.`;
+        } else {
+          errorMessage =
+            "Insufficient funds. Please get more Sepolia ETH from a faucet.";
+        }
+      } else if (error.message?.includes("user rejected")) {
+        errorMessage = "Transaction rejected by user";
+      } else if (error.shortMessage) {
+        errorMessage = error.shortMessage;
+      }
+
+      // Log full error for debugging
+      console.error("[Auction] Full error object:", {
+        message: error.message,
+        shortMessage: error.shortMessage,
+        details: error.details,
+        cause: error.cause,
+        data: error.data,
+      });
+
+      throw new Error(errorMessage);
     }
   };
 
@@ -105,7 +210,11 @@ export function useAuction() {
    * @param encryptedBid The encrypted bid handle (bytes32)
    * @param bidProof The proof bytes
    */
-  const submitBid = async (auctionId: number, encryptedBid: `0x${string}`, bidProof: `0x${string}`) => {
+  const submitBid = async (
+    auctionId: number,
+    encryptedBid: `0x${string}`,
+    bidProof: `0x${string}`
+  ) => {
     if (!address) {
       throw new Error("Wallet not connected");
     }
@@ -131,26 +240,103 @@ export function useAuction() {
    * @param startPrice Starting price in wei
    * @param duration Duration in seconds
    */
+  /**
+   * Create a new auction
+   * @param startPrice Starting price in ETH (string)
+   * @param duration Duration in seconds
+   */
   const createAuction = async (startPrice: string, duration: number) => {
     if (!address) {
       throw new Error("Wallet not connected");
     }
 
     try {
+      // 1. Chuẩn bị dữ liệu đầu vào
       const startPriceWei = parseEther(startPrice);
+      const durationBigInt = BigInt(duration);
 
+      console.log("[Auction] Preparing to create auction:", {
+        startPrice,
+        startPriceWei,
+        duration,
+      });
+
+      // 2. ⭐ ESTIMATE GAS (Sửa lỗi: Phải gọi hàm này trước khi tính buffer)
+      let estimatedGas;
+      try {
+        estimatedGas = await publicClient?.estimateContractGas({
+          address: AUCTION_CONTRACT_ADDRESS as `0x${string}`,
+          abi: AuctionABI.abi,
+          functionName: "createAuction",
+          args: [startPriceWei, durationBigInt],
+          account: address,
+        });
+        console.log("[Auction] Create Auction Estimated gas:", estimatedGas);
+      } catch (estimateError: any) {
+        console.error("[Auction] Gas estimation failed:", estimateError);
+
+        // Parse lỗi revert thường gặp khi tạo Auction
+        let revertReason = "Unknown error";
+        if (estimateError.message) {
+          if (estimateError.message.includes("Invalid duration")) {
+            revertReason = "Duration must be greater than minimum time";
+          } else if (estimateError.message.includes("Price must be > 0")) {
+            revertReason = "Starting price must be greater than 0";
+          } else if (estimateError.message.includes("Only owner")) {
+            // Nếu contract có modifier
+            revertReason = "Only the contract owner can create auctions";
+          } else {
+            revertReason = estimateError.shortMessage || estimateError.message;
+          }
+        }
+        throw new Error(`Transaction will fail: ${revertReason}`);
+      }
+
+      // 3. Thêm 20% Buffer cho Gas
+      const gasWithBuffer = estimatedGas
+        ? (estimatedGas * 120n) / 100n
+        : undefined;
+
+      console.log(
+        "[Auction] Submitting create transaction with gas:",
+        gasWithBuffer
+      );
+
+      // 4. Gửi Transaction
       const hash = await writeContractAsync({
         address: AUCTION_CONTRACT_ADDRESS as `0x${string}`,
         abi: AuctionABI.abi,
         functionName: "createAuction",
-        args: [startPriceWei, BigInt(duration)],
+        args: [startPriceWei, durationBigInt],
+        gas: gasWithBuffer,
       });
 
-      const receipt = await publicClient?.waitForTransactionReceipt({ hash });
+      console.log("[Auction] Create transaction submitted:", hash);
+
+      // 5. Chờ xác nhận
+      const receipt = await publicClient?.waitForTransactionReceipt({
+        hash,
+        timeout: 60_000,
+      });
+
+      if (receipt?.status === "reverted") {
+        throw new Error("Transaction reverted on chain.");
+      }
+
+      console.log("[Auction] Auction created successfully!", receipt);
       return { hash, receipt };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create auction:", error);
-      throw error;
+
+      // Tái sử dụng logic parse lỗi (hoặc viết hàm helper riêng để đỡ lặp code)
+      let errorMessage = error.message || "Failed to create auction";
+      if (errorMessage.includes("insufficient funds")) {
+        errorMessage = "Insufficient funds to pay for gas.";
+      } else if (errorMessage.includes("user rejected")) {
+        errorMessage = "Transaction rejected by user.";
+      }
+
+      throw new Error(errorMessage);
     }
   };
 
@@ -264,7 +450,9 @@ export function useHasUserBid(auctionId: number, userAddress?: string) {
     address: AUCTION_CONTRACT_ADDRESS as `0x${string}`,
     abi: AuctionABI.abi,
     functionName: "hasUserBid",
-    args: userAddress ? [BigInt(auctionId), userAddress as `0x${string}`] : undefined,
+    args: userAddress
+      ? [BigInt(auctionId), userAddress as `0x${string}`]
+      : undefined,
     query: {
       enabled: !!userAddress,
     },
@@ -301,7 +489,7 @@ export function useUserBids(userAddress?: string) {
         const bidAuctions: number[] = [];
 
         // Check each auction to see if user has bid
-        for (let i = 0; i < count; i++) {
+        for (let i = 1; i < count; i++) {
           const hasBid = await publicClient.readContract({
             address: AUCTION_CONTRACT_ADDRESS as `0x${string}`,
             abi: AuctionABI.abi,

@@ -1,5 +1,4 @@
 'use client';
-import { Tag } from '@lobehub/ui';
 import { createStyles } from 'antd-style';
 import Link from 'next/link';
 
@@ -54,10 +53,17 @@ const useStyles = createStyles(({ css, token }) => ({
     margin: 0;
   `,
   statusTag: css`
-    display: flex;
-    padding: 4px 8px;
+    background: #e3e3e3;
+    padding: 8px;
+    border-radius: 8px;
     justify-content: center;
     align-items: center;
+    color: #000;
+    font-family: Onest;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 14px;
   `,
   primaryValue: css`
     display: flex;
@@ -87,11 +93,8 @@ interface AuctionCardProps {
 export default function AuctionCard({
   id,
   title,
-  type,
   currentBid,
-  timeLeft,
   status,
-  bidders,
   imageUrl,
 }: AuctionCardProps) {
   const { styles } = useStyles();
@@ -104,12 +107,11 @@ export default function AuctionCard({
       <div className={styles.content}>
         <div className={styles.titleRow}>
           <h3 className={styles.title}>{title}</h3>
-          <Tag
+          <div
             className={styles.statusTag}
-            color={status === 'active' ? 'green' : 'orange'}
           >
             {status === 'active' ? 'Active' : 'Ending Soon'}
-          </Tag>
+          </div>
         </div>
         <span className={styles.primaryValue}>{currentBid}</span>
       </div>
@@ -117,7 +119,7 @@ export default function AuctionCard({
   );
 
   return id ? (
-    <Link href={`/auction/${id}`} className={styles.cardLink}>
+    <Link href={`/auction/${id}`} className={styles.cardLink} prefetch={false}>
       {CardContent}
     </Link>
   ) : (

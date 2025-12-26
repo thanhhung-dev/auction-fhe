@@ -3,7 +3,7 @@ import { createStyles } from 'antd-style';
 export const useStyles = createStyles(
   (
     { css, responsive, token },
-    { isEmpty, contentMaxWidth }: { contentMaxWidth: number; isEmpty: boolean },
+    { isEmpty}: { contentMaxWidth: number; isEmpty: boolean },
   ) => {
     return {
       root: css`

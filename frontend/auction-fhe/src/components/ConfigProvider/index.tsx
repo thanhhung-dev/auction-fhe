@@ -32,6 +32,7 @@ export const useCdnFn = (): CdnFn => {
   if (!config) return cdnFallback;
   if (config?.proxy !== "custom")
     return ({ pkg, version, path }) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       genCdnUrl({ path, pkg, proxy: config.proxy as any, version });
   return config?.customCdnFn || cdnFallback;
 };

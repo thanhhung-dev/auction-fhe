@@ -72,7 +72,6 @@ const useStyles = createStyles(({ css, token }) => ({
 const NavBar = () => {
   const pathname = usePathname();
   const { isConnected } = useAccount();
-  const isHome = pathname === "/";
   const { styles, cx } = useStyles();
 
   return (
@@ -117,12 +116,6 @@ const NavBar = () => {
                 >
                   My Bids
                 </Link>
-              )}
-
-              {isHome && (
-                <a href="#how-it-works" className={styles.navLink}>
-                  How It Works
-                </a>
               )}
             </nav>
 

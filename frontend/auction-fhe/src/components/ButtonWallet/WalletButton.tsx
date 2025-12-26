@@ -1,9 +1,8 @@
 'use client';
-
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { createStyles } from 'antd-style';
 
-const useStyles = createStyles(({ css, token }) => ({
+const useStyles = createStyles(({ css }) => ({
   button: css`
     height: 40px;
     padding: 0 16px;

@@ -3,13 +3,11 @@ import { ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import AuctionCard from './AutionCard.tsx';
-import { txToast } from "@/hooks/use-toast";
-import { toast as sonnerToast } from "sonner";
-import { Input, InputNumber } from '@lobehub/ui';
+import {InputNumber } from '@lobehub/ui';
 import { useAccount } from 'wagmi';
 import { createStyles } from 'antd-style';
 import { useParams } from 'next/navigation.js';
-import { useAuction, useAuctionData } from '@/hooks/useAuction';
+import { useAuction, useAuctionData, useHasUserBid } from '@/hooks/useAuction';
 import WalletButton from "./ButtonWallet/WalletButton";
 import { Alert } from '@lobehub/ui';
 const useStyles = createStyles(({ css, token }) => ({
@@ -107,9 +105,7 @@ const useStyles = createStyles(({ css, token }) => ({
     border-radius: 20px;
     overflow: hidden;
     background: ${token.colorBgContainer};
-
-    border: 7px solid #ebebebff;
-
+    border: 7px solid #e3e3e3;
     box-shadow: inset 0 0 0 1px rgba(144, 144, 144, 0.6),
       0 8px 24px rgba(0, 0, 0, 0.06);
 
@@ -131,17 +127,8 @@ const useStyles = createStyles(({ css, token }) => ({
     background: ${token.colorBgContainer};
     border-radius: 12px;
     overflow: hidden;
-    border: 2px solid transparent;
+    border: 5px solid #d2d2d2ff;
     cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover {
-      border-color: ${token.colorBorder};
-    }
-
-    &.active {
-      border-color: ${token.colorBorder};
-    }
 
     img {
       width: 100%;
@@ -382,28 +369,40 @@ const useStyles = createStyles(({ css, token }) => ({
     padding: 0;
     position: relative;
   `,
+  bidSuccessMessage: css`
+    padding: 16px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 10px;
+    text-align: center;
+    color: #22c55e;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+  `,
 }));
 const AUCTION_STATES = ["Pending", "Active", "Ended", "Settled", "Cancelled"];
-interface AlertState {
-  visible: boolean;
-  type: 'success' | 'error' | 'info' | 'warning';
-  title: string;
-  description: string;
-}
 interface AuctionDetailProps {
   auction: {
-    id: string;
+    id: number;
+
     title: string;
     author: string;
-    seller: string;
-    highestBidder: string;
-    startingBid: string;
     software: string;
     description: string;
     mainImage: string;
     thumbnails: string[];
+
+    startingBid: string;
+    highestBidder?: string;
+    seller: string;
+
     auctionStartTime: number;
     auctionEndTime: number;
+
     contractAddress: string;
     tokenId: string;
     state: number;
@@ -420,13 +419,13 @@ interface AuctionDetailProps {
 export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetailProps) {
   const { id } = useParams();
   const [alert, setAlert] = useState<{
-    type?: 'info' | 'success' | 'warning' | 'error' | 'secondary';
+    type?: 'info' | 'success' | 'warning' | 'error';
     title?: string;
     description?: React.ReactNode;
   } | null>(null);
   const auctionId = Number(id);
   const { address, isConnected } = useAccount();
-  const { auction: chainAuction, isLoading } = useAuctionData(auctionId);
+  const { hasBid, isLoading: checkingBid } = useHasUserBid(auctionId, address);
   const { placeBid, endAuction } = useAuction();
   const [bidAmount, setBidAmount] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -440,6 +439,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   const isSettled = auction.state === 3;
   const isSeller = address?.toLowerCase() === auction.seller.toLowerCase();
   const isWinner =
+    auction.highestBidder &&
     address?.toLowerCase() === auction.highestBidder.toLowerCase() &&
     auction.highestBidder !== "0x0000000000000000000000000000000000000000";
 
@@ -458,7 +458,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   };
 
   const showAlert = (
-    type: 'info' | 'success' | 'warning' | 'error' | 'secondary',
+    type: 'info' | 'success' | 'warning' | 'error',
     title: string,
     description: string
   ) => {
@@ -523,7 +523,6 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
   };
 
   return (
-
     <div className={styles.wrapper}>
       {/* <AuroraBackground /> */}
       <div className={styles.contentWrapper}>
@@ -573,7 +572,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
               <div className={styles.titleRow}>
                 <h1 className={styles.title}>{auction.title}</h1>
                 <span className={styles.statusBadge}>
-                  {isAuctionActive ? "Active" : "Ended"}
+                  {AUCTION_STATES[auction.state]}
                 </span>
               </div>
 
@@ -613,6 +612,7 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 </span>
               </div>
             </div>
+
             {alert && (
               <Alert
                 type={alert.type}
@@ -623,19 +623,42 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                 onClose={() => setAlert(null)}
               />
             )}
+            {isConnected && hasBid && !alert && (
+              <Alert
+                type="success"
+                message="Bid Placed"
+                description="You have already placed an encrypted bid on this auction. Wait for the auction to end to see the results."
+                showIcon
+              />
+            )}
+            {/* Bid Section */}
             {/* Bid Section */}
             {isAuctionActive && (
               <div className={styles.bidSection}>
                 {!isConnected ? (
-                  // Hiển thị button Connect Wallet khi chưa đăng nhập
+                  // Not connected - Show wallet button
                   <>
                     <label className={styles.bidLabel}>
                       Connect your wallet to place a bid
                     </label>
                     <WalletButton />
                   </>
+                ) : hasBid ? (
+                  // ALREADY BID - Show success message
+                  <>
+                    <label className={styles.bidLabel}>
+                      Your encrypted bid has been submitted
+                    </label>
+                    <div className={styles.bidSuccessMessage}>
+                      <span>✓</span>
+                      <span>
+                        Bid successfully placed. Results will be revealed when
+                        the auction ends.
+                      </span>
+                    </div>
+                  </>
                 ) : (
-                  // Hiển thị form bid khi đã đăng nhập
+                  // NOT BID YET - Show bid form
                   <>
                     <label className={styles.bidLabel}>
                       Place your encrypted bid (ETH)
@@ -644,19 +667,26 @@ export default function AuctionDetail({ auction, relatedAuctions }: AuctionDetai
                     <div className={styles.inputWrapper}>
                       <InputNumber
                         value={bidAmount}
-                        onChange={(value) => setBidAmount(value?.toString() || "")}
+                        onChange={(value) =>
+                          setBidAmount(value?.toString() || "")
+                        }
                         placeholder={`Min: ${auction.startingBid} ETH`}
                         min={parseFloat(auction.startingBid)}
                         step={0.01}
+                        disabled={checkingBid || isSubmitting}
                       />
                     </div>
 
                     <button
                       className={styles.bidButton}
                       onClick={handlePlaceBid}
-                      disabled={isSubmitting || !bidAmount}
+                      disabled={isSubmitting || !bidAmount || checkingBid}
                     >
-                      {isSubmitting ? "Submitting..." : "Submit Encrypted Bid"}
+                      {checkingBid
+                        ? "Checking..."
+                        : isSubmitting
+                        ? "Submitting..."
+                        : "Submit Encrypted Bid"}
                     </button>
                   </>
                 )}

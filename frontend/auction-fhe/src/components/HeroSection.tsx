@@ -276,11 +276,11 @@ export default function HeroSection() {
 
   return (
     <div className={styles.wrapper}>
-      {/* <AuroraBackground /> */}
+      <AuroraBackground />
       <div className={styles.container}>
         {/* LEFT SECTION */}
         <div className={styles.left}>
-          <div className={styles.tag}>Zama Template</div>
+          <div className={styles.tag}>FHE Template</div>
           <Text
             as="h1"
             strong
